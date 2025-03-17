@@ -19,44 +19,37 @@ so long as it is sufficiently long and unique.
 
 Could I have a longer example, that does more stuff?
 """
+from PIL import Image
 
-import cv2
-import numpy as np
+def calculate_mean_color(image_path):
+    # Open the image using PIL
+    img = Image.open(image_path)
+    
+    # Convert the image to RGB (in case it's in another format like RGBA)
+    img = img.convert('RGB')
+    
+    # Get the pixel data
+    pixels = list(img.getdata())
+    
+    # Initialize variables to store the sum of RGB values
+    total_r, total_g, total_b = 0, 0, 0
+    
+    # Loop through each pixel and sum the RGB values
+    for pixel in pixels:
+        r, g, b = pixel
+        total_r += r
+        total_g += g
+        total_b += b
+    
+    # Calculate the mean RGB values
+    num_pixels = len(pixels)
+    mean_r = total_r / num_pixels
+    mean_g = total_g / num_pixels
+    mean_b = total_b / num_pixels
+    
+    return (mean_r, mean_g, mean_b)
 
-# Load the image
-image = cv2.imread(image_file_path)
-
-# Convert the image to grayscale
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-# Apply Gaussian blur
-blur = cv2.GaussianBlur(gray, (5, 5), 0)
-
-# Perform edge detection
-edges = cv2.Canny(blur, 50, 150)
-
-# Perform a dilation and erosion to close gaps in between object edges
-dilated_edges = cv2.dilate(edges, None, iterations=2)
-eroded_edges = cv2.erode(dilated_edges, None, iterations=1)
-
-# Find contours in the eroded image, keep only the largest ones
-contours, _ = cv2.findContours(eroded_edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-contours = sorted(contours, key=cv2.contourArea, reverse=True)[:10]
-
-# Initialize our canvas for drawing the output
-output = image.copy()
-
-# Loop over the contours
-for contour in contours:
-    # Approximate the contour
-    peri = cv2.arcLength(contour, True)
-    approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
-
-    # If our approximated contour has four points, then
-    # we can assume that we have found our screen
-    if len(approx) == 4:
-        # Draw the contour on the image
-        cv2.drawContours(output, [approx], -1, (0, 255, 0), 2)
-
-# Save the output image
-cv2.imwrite("output_" + image_file_path, output)
+# Example usage
+image_path = 'path_to_your_image.jpg'
+mean_color = calculate_mean_color(image_path)
+print(f"The mean RGB color value is: {mean_color}")
