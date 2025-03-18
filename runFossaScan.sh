@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Ensure FOSSA CLI is installed and available in your PATH
+ export FOSSA_API_KEY= "5503bbc635a69c17e052b384a35c0f8c"
 if ! command -v fossa &> /dev/null
 then
     echo "FOSSA CLI could not be found. Please install it first."
