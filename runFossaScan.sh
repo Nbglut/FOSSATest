@@ -9,31 +9,43 @@ echo "FOSSA API Key: $FOSSA_API_KEY"
 if ! command -v fossa &> /dev/null
 then
     echo "FOSSA CLI could not be found. Please install it first."
-    sleep 1  # Pause for 1 second
+    sleep 3  # Pause for 3 seconds to let the user read the message
     exit 1
 fi
 
-# The Git repository path you want to scan
-REPO_PATH="$1"
+# The GitHub repository URL
+REPO_URL="$1"
 
-if [ -z "$REPO_PATH" ]; then
-  echo "Please provide the local Git repository path."
-  sleep 1  # Pause for 1 second
+# Check if repository URL is provided
+if [ -z "$REPO_URL" ]; then
+  echo "Please provide the GitHub repository URL."
+  sleep 3  # Pause for 3 seconds to let the user read the message
   exit 1
 fi
 
-# Check if the directory exists
-if [ ! -d "$REPO_PATH" ]; then
-  echo "Repository directory does not exist: $REPO_PATH"
-  sleep 1  # Pause for 1 second
-  exit 1
+# Directory to clone the repo
+REPO_DIR=$(basename "$REPO_URL" .git)
+
+# Check if the repository is already cloned
+if [ ! -d "$REPO_DIR" ]; then
+    echo "Cloning the repository from $REPO_URL..."
+    git clone "$REPO_URL" || { echo "Failed to clone the repository."; sleep 3; exit 1; }
+else
+    echo "Repository already cloned. Pulling the latest changes..."
+    cd "$REPO_DIR" || exit 1
+    git pull || { 
+        echo "Failed to pull the latest changes. Checking for conflicts...";
+        git status; 
+        sleep 3;
+        continue;
+    }
 fi
 
-# Navigate to the local repository
-cd "$REPO_PATH" || { echo "Failed to navigate to the repository directory."; sleep 1; exit 1; }
+# Navigate to the cloned repository directory
+cd "$REPO_DIR" || { echo "Failed to navigate to the repository directory."; sleep 3; exit 1; }
 
 # Fetch the latest changes from the remote repository
-git fetch --all
+git fetch --all || { echo "Failed to fetch all branches."; sleep 3; exit 1; }
 
 # Get all remote branches
 REMOTE_BRANCHES=$(git branch -r | grep -v '\->' | sed 's/origin\///')
@@ -52,14 +64,26 @@ do
 
     echo "Processing remote branch: $BRANCH"
     
-    # Stash untracked files before checkout
-    git stash --include-untracked || { echo "Failed to stash untracked files."; sleep 1; continue; }
-
+    # Check if there are untracked files and stash them only if necessary
+    git status --porcelain | grep "??" > /dev/null
+    if [ $? -eq 0 ]; then
+        echo "Stashing untracked files for branch $BRANCH"
+        git stash --include-untracked || { echo "Failed to stash untracked files for branch $BRANCH"; sleep 3; continue; }
+    fi
+    
     # Remove any existing lock file
     rm -f .git/index.lock
     
     # Checkout the remote branch locally
-    git checkout -b "$BRANCH" "origin/$BRANCH" || { echo "Failed to checkout branch $BRANCH"; git stash pop; sleep 1; continue; }
+    git checkout -b "$BRANCH" "origin/$BRANCH" || { echo "Failed to checkout branch $BRANCH"; git stash pop; sleep 3; continue; }
+    
+    # Check for merge conflicts after checkout
+    git status | grep "Unmerged paths"
+    if [ $? -eq 0 ]; then
+        echo "Merge conflicts detected in branch $BRANCH. Skipping this branch."
+        git stash pop
+        continue
+    fi
     
     # Run FOSSA scan on the branch
     echo "Running FOSSA scan on remote branch: $BRANCH"
@@ -68,14 +92,14 @@ do
     if ! fossa init; then
         echo "FOSSA initialization failed for branch $BRANCH"
         git stash pop
-        sleep 1  # Pause to read the message
+        sleep 3  # Pause to read the message
         continue
     fi
 
     if ! fossa analyze; then
         echo "FOSSA analysis failed for branch $BRANCH"
         git stash pop
-        sleep 1  # Pause to read the message
+        sleep 3  # Pause to read the message
         continue
     fi
     
@@ -93,3 +117,6 @@ done
 # Output the branches with issues
 echo "Scan completed. See '$ISSUE_BRANCHES' for branches with issues."
 cat "$ISSUE_BRANCHES"
+
+# Pause at the end of the script to allow reading the final output
+read -p "Press [Enter] to exit..."
