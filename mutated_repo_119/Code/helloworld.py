@@ -1,3 +1,4 @@
+print("Hello World!")
 """THE FOLLOWING CODE IS PROPERTY OF ANDREW SASS Copyright © 2023 DO NOT USE WITHOUT EXPLICIT PERMISSION FROM OWNER"""
 
 '''this code adds three numbers together in a unique, non-trivial, stupid, and very overcomplicated way'''
