@@ -12,17 +12,20 @@ Answer:
 Certainly! Here are several Python code samples that demonstrate how to interact with .NET components and libraries using Python. 
 These examples use the Python for .NET library, which allows Python to interoperate with .NET assemblies.
 
-Using .NET Framework Methods:
-You can also use .NET Framework methods from Python.
+Using a .NET Class:
+This example demonstrates how to use a .NET class from a .NET assembly in Python.
 """
 import clr
 clr.AddReference("System")  # Add reference to System assembly
 
-from System import DateTime  # Import DateTime class from System
+from System.Collections import ArrayList  # Import ArrayList from System
 
-# Create a .NET DateTime object
-now = DateTime.Now
+# Create a .NET ArrayList
+net_list = ArrayList()
 
-# Format and print the current date and time
-formatted_time = now.ToString("yyyy-MM-dd HH:mm:ss")
-print(formatted_time)
+# Add items to the list
+net_list.Add("Item 1")
+net_list.Add("Item 2")
+
+# Access elements in the list
+print(net_list[0])  # Output: Item 1
