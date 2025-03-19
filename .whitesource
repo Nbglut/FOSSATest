@@ -1,5 +1,4 @@
 {
-
   "checkRunSettings": {
     "vulnerableCheckRunConclusionLevel": "failure",
     "displayMode": "diff",
@@ -7,6 +6,9 @@
   },
   "issueSettings": {
     "minSeverityLevel": "LOW",
-    "issueType": "DEPENDENCY"
+    "issueType": "LICENSE"
+  },
+  "dependencySettings": {
+    "includeLicenses": true
   }
 }
