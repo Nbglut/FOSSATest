@@ -7,8 +7,5 @@
   "issueSettings": {
     "minSeverityLevel": "LOW",
     "issueType": "LICENSE"
-  },
-  "dependencySettings": {
-    "includeLicenses": true
   }
 }
